@@ -4,6 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import lang from 'bot-lang';
 import replace from 'async-replace';
+import nodejieba from 'nodejieba';
 import debuglog from 'debug';
 
 import wordnet from './wordnet';
@@ -107,8 +108,31 @@ const expandWordnetTrigger = function expandWordnetTrigger(trigger, factSystem, 
   replace(trigger, /\s*~(\w+)\s*/g, wordnetReplace, callback);
 };
 
+const chineseCharacter = /[\u4E00-\u9FA5]/;
+const cutChineseTrigger = function cutChineseTrigger(trigger) {
+  if (!chineseCharacter.test(trigger)) {
+    return trigger;
+  }
+
+  const tags = nodejieba.tag(trigger);
+  const cutTrigger = [];
+
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i];
+
+    if (i > 0 && tag.tag !== 'eng' && (tag.tag !== 'x' || chineseCharacter.test(tag.word))) {
+      cutTrigger.push(' ');
+    }
+
+    cutTrigger.push(tag.word);
+  }
+
+  return cutTrigger.join('');
+};
+
 const normalizeTrigger = function normalizeTrigger(trigger, factSystem, callback) {
   let cleanTrigger = lang.replace.all(trigger);
+  cleanTrigger = cutChineseTrigger(cleanTrigger);
   cleanTrigger = triggerParser.parse(cleanTrigger).clean;
   expandWordnetTrigger(cleanTrigger, factSystem, (err, cleanTrigger) => {
     callback(err, cleanTrigger);
