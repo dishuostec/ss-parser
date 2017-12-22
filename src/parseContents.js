@@ -109,25 +109,36 @@ const expandWordnetTrigger = function expandWordnetTrigger(trigger, factSystem, 
 };
 
 const chineseCharacter = /[\u4E00-\u9FA5]/;
+const insertSpaceLeft = /[^ |([]/;
+const insertSpaceRight = /[^ |)\]]/;
+const doublePartsOfSpeech = /(?:<(name|noun|adverb|verb|pronoun|adjective|entit(?:y|ie))(s|[0-9]+)?>){2,}/g;
 const cutChineseTrigger = function cutChineseTrigger(trigger) {
   if (!chineseCharacter.test(trigger)) {
     return trigger;
   }
 
-  const tags = nodejieba.tag(trigger);
-  const cutTrigger = [];
+  trigger = trigger.replace(doublePartsOfSpeech, (match) => {
+    return match.replace(/></g, '> <');
+  });
 
-  for (let i = 0; i < tags.length; i++) {
-    const tag = tags[i];
+  const cutted = trigger.replace(/[\u4E00-\u9FA5]+/g, (match, offset, string) => {
+    const cut = nodejieba.cut(match, true);
 
-    if (i > 0 && tag.tag !== 'eng' && (tag.tag !== 'x' || chineseCharacter.test(tag.word))) {
-      cutTrigger.push(' ');
+    if (offset > 0 && insertSpaceLeft.test(string.charAt(offset - 1))) {
+      cut.unshift('');
     }
 
-    cutTrigger.push(tag.word);
-  }
+    const nextOffset = offset + match.length;
+    if (nextOffset < string.length && insertSpaceRight.test(string.charAt(nextOffset))) {
+      cut.push('');
+    }
 
-  return cutTrigger.join('');
+    return cut.join(' ');
+  });
+
+  debug('origin trigger %s', trigger);
+  debug('cutted trigger %s', cutted);
+  return cutted;
 };
 
 const normalizeTrigger = function normalizeTrigger(trigger, factSystem, callback) {

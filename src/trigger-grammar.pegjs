@@ -5,9 +5,13 @@
     min = parseInt(min, 10);
     max = parseInt(max, 10);
     if (min === 0) {
-      return `\\s*((?:[^\\s]+\\s+){${min},${max - 1}}(?:[^\\s]+)?)\\s*`;
+      if (max === 1) {
+        return `\\s*(\\S+)?\\s*`;
+      } else {
+        return `\\s*((?:\\S+\\s+){0,${max - 1}}\\S+)?\\s*`;
+      }
     } else {
-      return `\\s*((?:[^\\s]+\\s+){${min - 1},${max - 1}}(?:[^\\s]+))\\s*`;
+      return `\\s*((?:\\S+\\s+){${min - 1},${max - 1}}\\S+)\\s*`;
     }
   }
 }
@@ -57,14 +61,14 @@ optionals
       const cleaned = [optional].concat(optionals).join("|");
       return {
         raw: `[${cleaned}]`,
-        clean: `(?:(?:\\s|\\b)+(?:${cleaned})(?:\\s|\\b)+|(?:\\s|\\b)+)`
+        clean: `(?:(?:\\s+|\\b|^)(?:${cleaned}(?:\\s|\\b|$))?)?`,
       };
     }
   / "[" ws* "*" ws* "]"
     {
       return {
         raw: "[*]",
-        clean: "(?:(?:(?:\\s|\\b)+(?:.*)(?:\\s|\\b)+|(?:\\s|\\b)+)|)"
+        clean: "(?:(?:\\s|\\b|^)(?:.*(?:\\s|\\b|$))?)?",
       };
     }
 
