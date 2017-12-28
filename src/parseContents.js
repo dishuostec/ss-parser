@@ -217,11 +217,11 @@ const processConversations = function processConversations(data) {
   const cleanData = _.clone(data);
   _.forEach(cleanData.gambits, (gambit) => {
     if (gambit.conversation !== null) {
+      gambit.conversation = triggerParser.parse(gambit.conversation.raw);
+      // Add punctuation at the end so can still match replies that have punctuation
+      const pattern = new RegExp(`^${gambit.conversation.clean}\\s*[?!.]*$`, 'i');
       const repliesMatched = [];
       _.forEach(cleanData.replies, (reply, id) => {
-        gambit.conversation = triggerParser.parse(gambit.conversation.raw);
-        // Add punctuation at the end so can still match replies that have punctuation
-        const pattern = new RegExp(`^${gambit.conversation.clean}\\s*[?!.]*$`, 'i');
         if (pattern.test(reply.string.replace(/\\n/g, ' '))) {
           repliesMatched.push(id);
         }
