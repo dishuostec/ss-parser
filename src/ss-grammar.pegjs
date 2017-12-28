@@ -43,7 +43,7 @@ replyFilter
     { return filter; }
 
 topicKeyword
-  = keyword:[a-zA-Z_]+ { return keyword.join(""); }
+  = keyword:[a-zA-Z_\u4E00-\u9FA5]+ { return keyword.join(""); }
 
 topicKeywords
   = "(" ws* firstKeyword:topicKeyword ws* keywords:("," ws* keyword:topicKeyword ws* { return keyword; })* ws* ")"
@@ -105,7 +105,7 @@ topicOptions
 
 topic
   = ws* "> topic "
-    name:[a-zA-Z0-9_]+
+    name:[a-zA-Z0-9_\u4E00-\u9FA5]+
     options:topicOptions? nl+
     gambits:gambits
     ws* "< topic"
@@ -147,7 +147,7 @@ string
   = str:[a-zA-Z]+ { return { type: "string", val: str.join("")}; }
 
 redirect
-  = ws* "@ " redirect:[a-zA-Z_ ]+ { return redirect.join(""); }
+  = ws* "@ " redirect:[a-zA-Z_ \u4E00-\u9FA5]+ { return redirect.join(""); }
 
 triggerOption
   = filter:gambitFilter { return { filter }; }
