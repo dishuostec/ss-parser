@@ -40,7 +40,7 @@ starminmax
     { return { raw: `*(${min},${max})`, clean: starminmax(min, max) }; }
 
 string
-  = str:[a-zA-Z]+ { return { type: "string", val: str.join("")}; }
+  = str:[a-zA-Z\u4E00-\u9FA5]+ { return { type: "string", val: str.join("")}; }
 
 cleanedString
   = wsl:ws* string:[^|()\[\]\n\r*]+ wsr:ws* { return string.join(""); }
