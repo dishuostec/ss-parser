@@ -213,6 +213,15 @@ const splitGambitsAndReplies = function splitGambitsAndReplies(data) {
   return cleanData;
 };
 
+
+const convertFullWidthSymbol = (string) => {
+  return string.replace(/[\uff01-\uff0f\uff1a-\uff20\uff38-\uff40\uff5b-\uff5e]/g, (match) => {
+    // ff01 -> 21
+    const codePoint = match.codePointAt(0);
+    return String.fromCodePoint(codePoint - 0xfee0);
+  });
+};
+
 const processConversations = function processConversations(data) {
   const cleanData = _.clone(data);
   _.forEach(cleanData.gambits, (gambit) => {
@@ -222,7 +231,7 @@ const processConversations = function processConversations(data) {
       const pattern = new RegExp(`^${gambit.conversation.clean}\\s*[?!.]*$`, 'i');
       const repliesMatched = [];
       _.forEach(cleanData.replies, (reply, id) => {
-        if (pattern.test(reply.string.replace(/\\n/g, ' '))) {
+        if (pattern.test(convertFullWidthSymbol(reply.string).replace(/\\n/g, ' '))) {
           repliesMatched.push(id);
         }
       });
