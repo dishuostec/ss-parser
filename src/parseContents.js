@@ -4,7 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import lang from 'bot-lang';
 import replace from 'async-replace';
-import nodejieba from 'nodejieba';
+import chs from 'ss-chs';
 import debuglog from 'debug';
 
 import wordnet from './wordnet';
@@ -51,7 +51,7 @@ const removeEmptyLines = function removeEmptyLines(code) {
   // Removes any lines that contain just tabs and spaces and trim the rest
   const lines = code.split('\n');
   const cleanedLines = lines.map(line => line.trim())
-                            .filter(line => line);
+    .filter(line => line);
   return cleanedLines.join('\n');
 };
 
@@ -108,42 +108,9 @@ const expandWordnetTrigger = function expandWordnetTrigger(trigger, factSystem, 
   replace(trigger, /\s*~(\w+)\s*/g, wordnetReplace, callback);
 };
 
-const chineseCharacter = /[\u4E00-\u9FA5]/;
-const insertSpaceLeft = /[^ |([]/;
-const insertSpaceRight = /[^ |)\]]/;
-const doublePartsOfSpeech = /(?:<(name|noun|adverb|verb|pronoun|adjective|entit(?:y|ie))(s|[0-9]+)?>){2,}/g;
-const cutChineseTrigger = function cutChineseTrigger(trigger) {
-  if (!chineseCharacter.test(trigger)) {
-    return trigger;
-  }
-
-  trigger = trigger.replace(doublePartsOfSpeech, (match) => {
-    return match.replace(/></g, '> <');
-  });
-
-  const cutted = trigger.replace(/[\u4E00-\u9FA5]+/g, (match, offset, string) => {
-    const cut = nodejieba.cut(match, true);
-
-    if (offset > 0 && insertSpaceLeft.test(string.charAt(offset - 1))) {
-      cut.unshift('');
-    }
-
-    const nextOffset = offset + match.length;
-    if (nextOffset < string.length && insertSpaceRight.test(string.charAt(nextOffset))) {
-      cut.push('');
-    }
-
-    return cut.join(' ');
-  });
-
-  debug('origin trigger %s', trigger);
-  debug('cutted trigger %s', cutted);
-  return cutted;
-};
-
 const normalizeTrigger = function normalizeTrigger(trigger, factSystem, callback) {
   let cleanTrigger = lang.replace.all(trigger);
-  cleanTrigger = cutChineseTrigger(cleanTrigger);
+  cleanTrigger = chs.cut(cleanTrigger);
   cleanTrigger = triggerParser.parse(cleanTrigger).clean;
   expandWordnetTrigger(cleanTrigger, factSystem, (err, cleanTrigger) => {
     callback(err, cleanTrigger);
@@ -214,24 +181,19 @@ const splitGambitsAndReplies = function splitGambitsAndReplies(data) {
 };
 
 
-const convertFullWidthSymbol = (string) => {
-  return string.replace(/[\uff01-\uff0f\uff1a-\uff20\uff38-\uff40\uff5b-\uff5e]/g, (match) => {
-    // ff01 -> 21
-    const codePoint = match.codePointAt(0);
-    return String.fromCodePoint(codePoint - 0xfee0);
-  });
-};
-
 const processConversations = function processConversations(data) {
   const cleanData = _.clone(data);
   _.forEach(cleanData.gambits, (gambit) => {
     if (gambit.conversation !== null) {
-      gambit.conversation = triggerParser.parse(gambit.conversation.raw);
+      gambit.conversation = triggerParser.parse(chs.cut(chs.cleanMessage(chs.convertFullWidthChar(gambit.conversation.raw))));
+      const conversation = gambit.conversation.clean;
       // Add punctuation at the end so can still match replies that have punctuation
-      const pattern = new RegExp(`^${gambit.conversation.clean}\\s*[?!.]*$`, 'i');
+      const pattern = new RegExp(`^${conversation}\\s*[?!.]*$`, 'i');
+
       const repliesMatched = [];
       _.forEach(cleanData.replies, (reply, id) => {
-        if (pattern.test(convertFullWidthSymbol(reply.string).replace(/\\n/g, ' '))) {
+        const replyString = chs.cut(chs.cleanMessage(chs.convertFullWidthChar(reply.string))).replace(/\\n/g, ' ');
+        if (pattern.test(replyString)) {
           repliesMatched.push(id);
         }
       });
