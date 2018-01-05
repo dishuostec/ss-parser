@@ -197,6 +197,11 @@ const processConversations = function processConversations(data) {
           repliesMatched.push(id);
         }
       });
+
+      if (repliesMatched.length === 0) {
+        console.warn('!!! could not find any reply match conversation for gambit: %O', gambit);
+      }
+
       gambit.conversation = repliesMatched;
     }
   });
