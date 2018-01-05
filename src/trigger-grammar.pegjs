@@ -5,10 +5,16 @@
     min = parseInt(min, 10);
     max = parseInt(max, 10);
     if (min === 0) {
-      if (max === 1) {
-        return `\\s*(\\S+)?\\s*`;
-      } else {
+      if (max > 1) {
         return `\\s*((?:\\S+\\s+){0,${max - 1}}\\S+)?\\s*`;
+      } else {
+        return `\\s*(\\S+)?\\s*`;
+      }
+    } if (min === max) {
+      if (min === 1) {
+        return `\\s*(\\S+)\\s*`;
+      } else {
+        return `\\s*((?:\\S+\\s+){${min - 1}}\\S+)\\s*`;
       }
     } else {
       return `\\s*((?:\\S+\\s+){${min - 1},${max - 1}}\\S+)\\s*`;
