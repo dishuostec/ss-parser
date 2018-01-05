@@ -1,11 +1,11 @@
 {
-  "name": "ss-parser",
+  "name": "@dishuostec/ss-parser",
   "version": "1.0.3",
   "description": "The parser interface for SuperScript",
   "main": "./lib/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/superscriptjs/ss-parser"
+    "url": "https://github.com/dishuostec/ss-parser"
   },
   "scripts": {
     "build": "babel src --out-dir lib --copy-files",
@@ -15,7 +15,7 @@
   },
   "author": "Rob Ellis",
   "license": "MIT",
-  "homepage": "https://github.com/superscriptjs/ss-parser",
+  "homepage": "https://github.com/dishuostec/ss-parser",
   "dependencies": {
     "async": "^2.1.5",
     "async-replace": "^1.0.1",
